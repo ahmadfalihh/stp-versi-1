@@ -28,8 +28,6 @@
             </p>
         </header>
 
-        <!-- Input API Key Dihapus dari sini -->
-
         <div class="mb-4">
             <label for="text-input-area" class="sr-only">Masukkan Teks di Sini</label>
             <textarea id="text-input-area" rows="8" class="w-full bg-gray-900/50 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-4" placeholder="Ketik atau tempel teks di sini...
@@ -124,10 +122,7 @@ Setiap baris akan menjadi satu file audio."></textarea>
         let stopRequested = false;
         let currentAudioPlaying = null;
 
-        // --- API CONFIGURATION ---
-        // PENTING: API Key sekarang diletakkan di sini.
-        const API_KEY = "AIzaSyC08TQymjN9r36gttdF-xaDEYM2oI_ozyY"; // Ganti dengan API Key Anda yang valid
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
+        // --- API CONFIGURATION DIHAPUS DARI SINI ---
 
         // --- EVENT LISTENERS ---
         textInputArea.addEventListener('input', () => {
@@ -257,17 +252,30 @@ Setiap baris akan menjadi satu file audio."></textarea>
         async function generateAudio(text, voice, style, customStyle) {
             let selectedStyle = (style === 'custom') ? customStyle.trim() : style;
             const combinedText = (selectedStyle.toLowerCase() !== 'normal') ? `Ucapkan dengan gaya ${selectedStyle}: ${text}` : text;
-            const payload = {
-                contents: [{ parts: [{ text: combinedText }] }],
-                generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } } },
-            };
-            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) throw new Error(`API request failed: ${await response.text()}`);
+            
+            // PERUBAHAN: Memanggil backend di Vercel, bukan Google langsung
+            const response = await fetch('/api/generate-audio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: combinedText,
+                    voice: voice
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `API request failed with status ${response.status}`);
+            }
+
             const result = await response.json();
             const part = result?.candidates?.[0]?.content?.parts?.[0];
-            if (!part?.inlineData?.data || !part?.inlineData?.mimeType) throw new Error("Invalid API response");
+            if (!part?.inlineData?.data || !part?.inlineData?.mimeType) {
+                throw new Error("Invalid API response from the server");
+            }
             return { audioData: part.inlineData.data, mimeType: part.inlineData.mimeType };
         }
+
         function handleTableClick(event) {
             const target = event.target.closest('button');
             if (!target) return;
