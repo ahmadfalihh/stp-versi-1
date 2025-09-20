@@ -30,7 +30,7 @@
 
         <div class="mb-4">
             <label for="text-input-area" class="sr-only">Masukkan Teks di Sini</label>
-            <textarea id="text-input-area" rows="8" class="w-full bg-gray-900/50 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-4" placeholder="Ketik atau tempel teks di sini...
+            <textarea id="text-input-area" rows="8" class="w-full bg-gray-900/50 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-4" placeholder="Ketik atau tempel teks di sini...
 Setiap baris akan menjadi satu file audio."></textarea>
         </div>
 
@@ -38,7 +38,7 @@ Setiap baris akan menjadi satu file audio."></textarea>
             <div class="flex flex-wrap items-center gap-3 w-full">
                 <div class="flex-grow min-w-[150px]">
                     <label for="voice-select" class="sr-only">Pilih Suara</label>
-                    <select id="voice-select" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5">
+                    <select id="voice-select" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                         <option value="Puck" selected>Wanita 1 (Ceria)</option>
                         <option value="Zephyr">Wanita 2 (Jelas)</option>
                         <option value="Charon">Pria 1 (Informatif)</option>
@@ -47,7 +47,7 @@ Setiap baris akan menjadi satu file audio."></textarea>
                 </div>
                  <div class="flex-grow min-w-[200px]">
                     <label for="style-prompt-select" class="sr-only">Pilih Gaya Suara</label>
-                    <select id="style-prompt-select" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5">
+                    <select id="style-prompt-select" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                         <option selected value="Normal">Gaya Normal</option>
                         <option value="narator film dokumenter">Gaya Narator</option>
                         <option value="bersemangat dan ceria">Gaya Ceria</option>
@@ -58,18 +58,18 @@ Setiap baris akan menjadi satu file audio."></textarea>
                         <option value="marah dan tegas">Gaya Marah</option>
                         <option value="custom">-- Gaya Sendiri --</option>
                     </select>
-                    <input type="text" id="custom-style-prompt" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 mt-2 hidden" placeholder="Ketik gaya custom di sini...">
+                    <input type="text" id="custom-style-prompt" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 mt-2 hidden" placeholder="Ketik gaya custom di sini...">
                 </div>
                 
                 <div class="flex items-center gap-2 ml-auto">
-                    <button id="start-queue-btn" class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg" disabled>
+                    <button id="start-queue-btn" class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg" disabled>
                         <span id="start-btn-text">Mulai Antrian</span>
                     </button>
-                    <select id="format-select" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                    <select id="format-select" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg p-2.5">
                         <option value="wav">WAV</option>
                         <option value="mp3" selected>MP3</option>
                     </select>
-                    <button id="download-all-btn" class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg" disabled>
+                    <button id="download-all-btn" class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg" disabled>
                         <span>Unduh Semua</span>
                     </button>
                 </div>
@@ -77,7 +77,7 @@ Setiap baris akan menjadi satu file audio."></textarea>
         </div>
 
         <div class="w-full bg-gray-700 rounded-full h-3 mb-4 hidden" id="progress-bar-container">
-            <div id="progress-bar" class="bg-emerald-500 h-3 rounded-full" style="width: 0%"></div>
+            <div id="progress-bar" class="bg-blue-600 h-3 rounded-full" style="width: 0%"></div>
         </div>
 
         <div class="w-full bg-gray-900/50 rounded-lg overflow-hidden">
@@ -121,6 +121,8 @@ Setiap baris akan menjadi satu file audio."></textarea>
         let isProcessing = false;
         let stopRequested = false;
         let currentAudioPlaying = null;
+
+        // --- API CONFIGURATION DIHAPUS DARI SINI ---
 
         // --- EVENT LISTENERS ---
         textInputArea.addEventListener('input', () => {
@@ -214,15 +216,15 @@ Setiap baris akan menjadi satu file audio."></textarea>
                 </tr>`).join('');
         }
         function getStatusBadge(status) {
-            const styles = {'IN QUEUE': 'bg-yellow-900 text-yellow-300', 'PROCESSING': 'bg-blue-900 text-blue-300 animate-pulse', 'DONE': 'bg-emerald-900 text-emerald-300', 'FAILED': 'bg-red-900 text-red-300', 'STOPPED': 'bg-gray-600 text-gray-300'};
+            const styles = {'IN QUEUE': 'bg-yellow-900 text-yellow-300', 'PROCESSING': 'bg-blue-900 text-blue-300 animate-pulse', 'DONE': 'bg-green-900 text-green-300', 'FAILED': 'bg-red-900 text-red-300', 'STOPPED': 'bg-gray-600 text-gray-300'};
             return `<span class="status-badge ${styles[status] || ''}">${status}</span>`;
         }
         function getAction(task) {
             if (task.status === 'DONE') {
                 const isPlaying = currentAudioPlaying === task.id;
                 return `<div class="flex items-center justify-center gap-2">
-                    <button data-task-id="${task.id}" class="listen-btn bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-full" title="Dengarkan">${isPlaying ? '❚❚' : '▶'}</button>
-                    <button data-task-id="${task.id}" class="download-btn bg-gray-600 hover:bg-gray-500 text-white p-2 rounded-full" title="Unduh">↓</button>
+                    <button data-task-id="${task.id}" class="listen-btn bg-blue-600 p-2 rounded-full" title="Dengarkan">${isPlaying ? '❚❚' : '▶'}</button>
+                    <button data-task-id="${task.id}" class="download-btn bg-gray-600 p-2 rounded-full" title="Unduh">↓</button>
                 </div>`;
             }
             return `-`;
@@ -251,6 +253,7 @@ Setiap baris akan menjadi satu file audio."></textarea>
             let selectedStyle = (style === 'custom') ? customStyle.trim() : style;
             const combinedText = (selectedStyle.toLowerCase() !== 'normal') ? `Ucapkan dengan gaya ${selectedStyle}: ${text}` : text;
             
+            // PERUBAHAN: Memanggil backend di Vercel, bukan Google langsung
             const response = await fetch('/api/generate-audio', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -359,10 +362,10 @@ Setiap baris akan menjadi satu file audio."></textarea>
         function updateStartButtonUI() {
             if (isProcessing) {
                 startBtnText.textContent = 'Hentikan Proses';
-                startQueueBtn.classList.replace('bg-emerald-600', 'bg-red-600');
+                startQueueBtn.classList.replace('bg-blue-600', 'bg-red-600');
             } else {
                 startBtnText.textContent = 'Mulai Antrian';
-                startQueueBtn.classList.replace('bg-red-600', 'bg-emerald-600');
+                startQueueBtn.classList.replace('bg-red-600', 'bg-blue-600');
                 const hasUnprocessed = tasks.some(t => t.status === 'IN QUEUE' || t.status === 'STOPPED');
                 if (tasks.length > 0 && !hasUnprocessed) {
                     startBtnText.textContent = 'Selesai';
