@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STP Ver 1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #2d3748; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-5xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 my-8">
+        
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-white">STP Ver 1.0</h1>
+            <p class="text-gray-400 mt-2">
+                Pilih suara dan gaya, ketik teks Anda di bawah (satu kalimat per baris), dan mulai proses.
+            </p>
+        </header>
+
+        <!-- Input API Key Dihapus dari sini -->
+
+        <div class="mb-4">
+            <label for="text-input-area" class="sr-only">Masukkan Teks di Sini</label>
+            <textarea id="text-input-area" rows="8" class="w-full bg-gray-900/50 border border-gray-600 text-gray-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-4" placeholder="Ketik atau tempel teks di sini...
+Setiap baris akan menjadi satu file audio."></textarea>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 p-4 bg-gray-900/50 rounded-lg">
+            <div class="flex flex-wrap items-center gap-3 w-full">
+                <div class="flex-grow min-w-[150px]">
+                    <label for="voice-select" class="sr-only">Pilih Suara</label>
+                    <select id="voice-select" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                        <option value="Puck" selected>Wanita 1 (Ceria)</option>
+                        <option value="Zephyr">Wanita 2 (Jelas)</option>
+                        <option value="Charon">Pria 1 (Informatif)</option>
+                        <option value="Fenrir">Pria 2 (Bersemangat)</option>
+                    </select>
+                </div>
+                 <div class="flex-grow min-w-[200px]">
+                    <label for="style-prompt-select" class="sr-only">Pilih Gaya Suara</label>
+                    <select id="style-prompt-select" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                        <option selected value="Normal">Gaya Normal</option>
+                        <option value="narator film dokumenter">Gaya Narator</option>
+                        <option value="bersemangat dan ceria">Gaya Ceria</option>
+                        <option value="berbisik dan misterius">Gaya Berbisik</option>
+                        <option value="robot">Gaya Robot</option>
+                        <option value="sedih dan melankolis">Gaya Sedih</option>
+                        <option value="pembawa berita">Gaya Berita</option>
+                        <option value="marah dan tegas">Gaya Marah</option>
+                        <option value="custom">-- Gaya Sendiri --</option>
+                    </select>
+                    <input type="text" id="custom-style-prompt" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 mt-2 hidden" placeholder="Ketik gaya custom di sini...">
+                </div>
+                
+                <div class="flex items-center gap-2 ml-auto">
+                    <button id="start-queue-btn" class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg" disabled>
+                        <span id="start-btn-text">Mulai Antrian</span>
+                    </button>
+                    <select id="format-select" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg p-2.5">
+                        <option value="wav">WAV</option>
+                        <option value="mp3" selected>MP3</option>
+                    </select>
+                    <button id="download-all-btn" class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg" disabled>
+                        <span>Unduh Semua</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full bg-gray-700 rounded-full h-3 mb-4 hidden" id="progress-bar-container">
+            <div id="progress-bar" class="bg-blue-600 h-3 rounded-full" style="width: 0%"></div>
+        </div>
+
+        <div class="w-full bg-gray-900/50 rounded-lg overflow-hidden">
+            <div class="h-96 overflow-y-auto">
+                <table class="w-full text-sm text-left text-gray-300">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-700 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 w-16 text-center">No.</th>
+                            <th class="px-6 py-3">Teks Original</th>
+                            <th class="px-6 py-3 w-40 text-center">Status</th>
+                            <th class="px-6 py-3 w-32 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-table-body">
+                        <tr><td colspan="4" class="text-center py-16 text-gray-500">Ketik teks di atas untuk memulai.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio-player" class="hidden"></audio>
+
+    <script type="module">
+        // --- DOM ELEMENTS ---
+        const textInputArea = document.getElementById('text-input-area');
+        const startQueueBtn = document.getElementById('start-queue-btn');
+        const downloadAllBtn = document.getElementById('download-all-btn');
+        const tableBody = document.getElementById('task-table-body');
+        const audioPlayer = document.getElementById('audio-player');
+        const startBtnText = document.getElementById('start-btn-text');
+        const voiceSelect = document.getElementById('voice-select');
+        const styleSelect = document.getElementById('style-prompt-select');
+        const customStyleInput = document.getElementById('custom-style-prompt');
+        const formatSelect = document.getElementById('format-select');
+        const progressBarContainer = document.getElementById('progress-bar-container');
+        const progressBar = document.getElementById('progress-bar');
+
+        // --- STATE ---
+        let tasks = [];
+        let isProcessing = false;
+        let stopRequested = false;
+        let currentAudioPlaying = null;
+
+        // --- API CONFIGURATION ---
+        // PENTING: API Key sekarang diletakkan di sini.
+        const API_KEY = "AIzaSyC08TQymjN9r36gttdF-xaDEYM2oI_ozyY"; // Ganti dengan API Key Anda yang valid
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
+
+        // --- EVENT LISTENERS ---
+        textInputArea.addEventListener('input', () => {
+            startQueueBtn.disabled = textInputArea.value.trim() === '';
+        });
+
+        startQueueBtn.addEventListener('click', () => {
+            if (isProcessing) {
+                stopRequested = true;
+                startBtnText.textContent = 'Menghentikan...';
+                startQueueBtn.disabled = true;
+            } else {
+                prepareAndStartQueue();
+            }
+        });
+
+        downloadAllBtn.addEventListener('click', downloadAllAsZip);
+        tableBody.addEventListener('click', handleTableClick);
+        styleSelect.addEventListener('change', () => {
+            customStyleInput.classList.toggle('hidden', styleSelect.value !== 'custom');
+        });
+        
+        // --- LOGIKA UTAMA ---
+        function prepareAndStartQueue() {
+            parseTextInput();
+            if (tasks.length > 0) {
+                renderTable();
+                startQueueProcessing();
+            } else {
+                alert("Silakan masukkan teks terlebih dahulu.");
+            }
+        }
+        
+        function parseTextInput() {
+            tasks = [];
+            const lines = textInputArea.value.split(/\r?\n/).filter(line => line.trim() !== '');
+            lines.forEach((line, index) => {
+                tasks.push({ id: index + 1, text: line.trim(), status: 'IN QUEUE', audioData: null, mimeType: null });
+            });
+        }
+
+        async function startQueueProcessing() {
+            if (isProcessing) return;
+            isProcessing = true;
+            stopRequested = false;
+            progressBarContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            updateStartButtonUI();
+            
+            [textInputArea, voiceSelect, styleSelect, customStyleInput].forEach(el => el.disabled = true);
+
+            for (const task of tasks) {
+                if (stopRequested) break;
+                if (task.status === 'IN QUEUE') {
+                    try {
+                        updateTaskStatus(task.id, 'PROCESSING');
+                        const { audioData, mimeType } = await generateAudio(task.text, voiceSelect.value, styleSelect.value, customStyleInput.value);
+                        task.audioData = audioData;
+                        task.mimeType = mimeType;
+                        updateTaskStatus(task.id, 'DONE');
+                    } catch (error) {
+                        console.error(`Failed to process task ${task.id}:`, error);
+                        updateTaskStatus(task.id, 'FAILED');
+                    }
+                }
+            }
+            
+            tasks.forEach(t => {
+                if (t.status === 'PROCESSING' || (stopRequested && t.status === 'IN QUEUE')) {
+                    updateTaskStatus(t.id, 'STOPPED');
+                }
+            });
+
+            isProcessing = false;
+             [textInputArea, voiceSelect, styleSelect, customStyleInput].forEach(el => el.disabled = false);
+            updateStartButtonUI();
+        }
+
+        // --- UI & STATE UPDATES ---
+        function renderTable() {
+            if (tasks.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-16 text-gray-500">Ketik teks di atas untuk memulai.</td></tr>`;
+                return;
+            }
+            tableBody.innerHTML = tasks.map(task => `
+                <tr class="bg-gray-800 border-b border-gray-700">
+                    <td class="px-4 py-4 text-center">${task.id}</td>
+                    <td class="px-6 py-4"><p class="max-w-md truncate" title="${task.text}">${task.text}</p></td>
+                    <td class="px-6 py-4 text-center">${getStatusBadge(task.status)}</td>
+                    <td class="px-6 py-4 text-center">${getAction(task)}</td>
+                </tr>`).join('');
+        }
+        function getStatusBadge(status) {
+            const styles = {'IN QUEUE': 'bg-yellow-900 text-yellow-300', 'PROCESSING': 'bg-blue-900 text-blue-300 animate-pulse', 'DONE': 'bg-green-900 text-green-300', 'FAILED': 'bg-red-900 text-red-300', 'STOPPED': 'bg-gray-600 text-gray-300'};
+            return `<span class="status-badge ${styles[status] || ''}">${status}</span>`;
+        }
+        function getAction(task) {
+            if (task.status === 'DONE') {
+                const isPlaying = currentAudioPlaying === task.id;
+                return `<div class="flex items-center justify-center gap-2">
+                    <button data-task-id="${task.id}" class="listen-btn bg-blue-600 p-2 rounded-full" title="Dengarkan">${isPlaying ? '❚❚' : '▶'}</button>
+                    <button data-task-id="${task.id}" class="download-btn bg-gray-600 p-2 rounded-full" title="Unduh">↓</button>
+                </div>`;
+            }
+            return `-`;
+        }
+        function updateTaskStatus(taskId, newStatus) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = newStatus;
+                renderTable();
+                updateProgressBar();
+                checkQueueCompletion();
+            }
+        }
+        function checkQueueCompletion() {
+            const doneTasks = tasks.filter(t => t.status === 'DONE').length;
+            downloadAllBtn.disabled = doneTasks === 0 || isProcessing;
+        }
+        function updateProgressBar() {
+            if (tasks.length === 0) return;
+            const completed = tasks.filter(t => t.status !== 'IN QUEUE' && t.status !== 'PROCESSING').length;
+            progressBar.style.width = `${(completed / tasks.length) * 100}%`;
+        }
+        
+        // --- API & AUDIO FUNCTIONS ---
+        async function generateAudio(text, voice, style, customStyle) {
+            let selectedStyle = (style === 'custom') ? customStyle.trim() : style;
+            const combinedText = (selectedStyle.toLowerCase() !== 'normal') ? `Ucapkan dengan gaya ${selectedStyle}: ${text}` : text;
+            const payload = {
+                contents: [{ parts: [{ text: combinedText }] }],
+                generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } } },
+            };
+            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error(`API request failed: ${await response.text()}`);
+            const result = await response.json();
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            if (!part?.inlineData?.data || !part?.inlineData?.mimeType) throw new Error("Invalid API response");
+            return { audioData: part.inlineData.data, mimeType: part.inlineData.mimeType };
+        }
+        function handleTableClick(event) {
+            const target = event.target.closest('button');
+            if (!target) return;
+            const taskId = parseInt(target.dataset.taskId, 10);
+            const task = tasks.find(t => t.id === taskId);
+            if (target.classList.contains('listen-btn')) {
+                if (currentAudioPlaying === taskId && !audioPlayer.paused) audioPlayer.pause();
+                else if (task?.audioData) { playAudio(task); currentAudioPlaying = taskId; }
+                renderTable();
+            } else if (target.classList.contains('download-btn') && task) downloadAudio(task);
+        }
+        audioPlayer.onpause = audioPlayer.onended = () => { currentAudioPlaying = null; renderTable(); };
+        async function playAudio(task) {
+            const blob = await createAudioBlob(task, 'mp3');
+            audioPlayer.src = URL.createObjectURL(blob);
+            audioPlayer.play();
+        }
+        async function downloadAudio(task) {
+            const format = formatSelect.value;
+            const blob = await createAudioBlob(task, format);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${generateFileName(task.text)}.${format}`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+        async function downloadAllAsZip() {
+            const zip = new JSZip();
+            const doneTasks = tasks.filter(t => t.status === 'DONE');
+            if (doneTasks.length === 0) return;
+            downloadAllBtn.disabled = true;
+            const originalText = downloadAllBtn.querySelector('span').textContent;
+            let count = 0;
+            for (const task of doneTasks) {
+                downloadAllBtn.querySelector('span').textContent = `Zip... (${++count}/${doneTasks.length})`;
+                const blob = await createAudioBlob(task, formatSelect.value);
+                zip.file(`${generateFileName(task.text)}.${formatSelect.value}`, blob);
+            }
+            const content = await zip.generateAsync({ type: "blob" });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(content);
+            a.download = 'tts_batch_audio.zip';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            downloadAllBtn.disabled = false;
+            downloadAllBtn.querySelector('span').textContent = originalText;
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function generateFileName(text) { return (text.replace(/[^\w\s]/gi, '').toLowerCase().split(/\s+/).slice(0, 5).join('_') || 'audio'); }
+        async function createAudioBlob(task, format) {
+            if (format === 'mp3') return createMp3Blob(task.audioData, task.mimeType);
+            return createWavBlob(task.audioData, task.mimeType);
+        }
+        function getSampleRate(mimeType) { return mimeType.match(/rate=(\d+)/) ? parseInt(mimeType.match(/rate=(\d+)/)[1], 10) : 24000; }
+        function base64ToPcm(base64) {
+            const binary = window.atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return new Int16Array(bytes.buffer);
+        }
+        function createMp3Blob(base64, mime) {
+            const pcm = base64ToPcm(base64);
+            const encoder = new lamejs.Mp3Encoder(1, getSampleRate(mime), 128);
+            const chunks = [];
+            for (let i = 0; i < pcm.length; i += 1152) chunks.push(encoder.encodeBuffer(pcm.subarray(i, i + 1152)));
+            chunks.push(encoder.flush());
+            return new Blob(chunks, { type: 'audio/mpeg' });
+        }
+        function createWavBlob(base64, mime) {
+            const pcm = base64ToPcm(base64);
+            const sampleRate = getSampleRate(mime);
+            const buffer = new ArrayBuffer(44 + pcm.length * 2);
+            const view = new DataView(buffer);
+            const write = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+            write(0, 'RIFF'); view.setUint32(4, 36 + pcm.length * 2, true); write(8, 'WAVE');
+            write(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true); write(36, 'data'); view.setUint32(40, pcm.length * 2, true);
+            new Int16Array(buffer, 44).set(pcm);
+            return new Blob([view], { type: 'audio/wav' });
+        }
+        function updateStartButtonUI() {
+            if (isProcessing) {
+                startBtnText.textContent = 'Hentikan Proses';
+                startQueueBtn.classList.replace('bg-blue-600', 'bg-red-600');
+            } else {
+                startBtnText.textContent = 'Mulai Antrian';
+                startQueueBtn.classList.replace('bg-red-600', 'bg-blue-600');
+                const hasUnprocessed = tasks.some(t => t.status === 'IN QUEUE' || t.status === 'STOPPED');
+                if (tasks.length > 0 && !hasUnprocessed) {
+                    startBtnText.textContent = 'Selesai';
+                    startQueueBtn.disabled = true;
+                } else {
+                    startQueueBtn.disabled = textInputArea.value.trim() === '';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
